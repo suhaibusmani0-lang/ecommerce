@@ -51,7 +51,7 @@ const LoginPage = () => {
     setError("");
 
     try {
-      const res = await fetch("/api/test", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

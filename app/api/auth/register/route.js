@@ -1,6 +1,9 @@
 import { connectDB } from "@/lib/databaseConnection";
+import { sendEmail } from "@/lib/sentMail";
+import { emailVerificationLink } from "@/email/emailVerificationLink";
 import { z } from "zod";
 import bcrypt from "bcrypt";
+import crypto from "node:crypto";
 
 const validatedSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -10,6 +13,16 @@ const validatedSchema = z.object({
 
 function jsonResponse(status, message, data = null) {
   return Response.json({ ok: status < 400, message, data }, { status });
+}
+
+function getErrorStatus(error) {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (/MongoDB|MONGODB_URI/i.test(message)) {
+    return 503;
+  }
+
+  return 500;
 }
 
 export async function POST(request) {
@@ -35,22 +48,36 @@ export async function POST(request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const verificationToken = crypto.randomUUID();
+    const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/auth/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+
     const newUser = await UserModel.create({
       name,
       email,
       password: hashedPassword,
       role: "user",
+      emailVerificationToken: verificationToken,
+      emailVerificationExpires: Date.now() + 60 * 60 * 1000,
     });
 
-    return jsonResponse(201, "User registered successfully", {
+    try {
+      await sendEmail(
+        email,
+        "Verify your email address",
+        emailVerificationLink(verificationUrl)
+      );
+    } catch (mailError) {
+      console.error("Verification email failed:", mailError);
+      return jsonResponse(503, "User created, but verification email could not be sent. Please try again later.");
+    }
+
+    return jsonResponse(201, "User registered successfully. Please check your email to verify your account.", {
       id: newUser._id,
       email: newUser.email,
     });
   } catch (error) {
     console.error("Registration Error:", error);
-    return jsonResponse(
-      500,
-      error instanceof Error ? error.message : "Internal Server Error"
-    );
+    const message = error instanceof Error ? error.message : "Internal Server Error";
+    return jsonResponse(getErrorStatus(error), message);
   }
 }

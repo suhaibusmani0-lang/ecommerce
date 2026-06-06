@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 
-const Layout = ({ children }) => {
+const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen w-full flex">
       {/* Left side (Image - 50%) */}
