@@ -44,7 +44,8 @@ export async function POST(request) {
       );
     }
 
-    const { email, password } = parsed.data;
+    const { password } = parsed.data;
+    const email = parsed.data.email.toLowerCase().trim();
 
     const user = await UserModel.findOne({ email }).select("+password");
 
@@ -93,18 +94,15 @@ export async function POST(request) {
     }
 
     // Delete Old OTPs
-    await OtpModel.deleteMany({
-      email: user.email,
-    });
+    await OtpModel.deleteMany({ email: user.email });
 
-    // Generate OTP
+    // Generate & Save OTP
     const otp = generateOtp();
+    const otpRecord = await OtpModel.create({ email: user.email, otp });
 
-    // Save OTP
-    await OtpModel.create({
-      email: user.email,
-      otp,
-    });
+    if (!otpRecord) {
+      return jsonResponse(500, "Failed to generate OTP. Please try again.");
+    }
 
     // Send OTP Email
     await sendEmail(user.email, "Your Login OTP", otpEmail(otp));

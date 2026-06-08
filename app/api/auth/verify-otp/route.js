@@ -15,13 +15,19 @@ export async function POST(request) {
       return jsonResponse(400, "Email and OTP are required");
     }
 
-    const record = await OtpModel.findOne({ email, otp }).sort({ createdAt: -1 });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const record = await OtpModel.findOne({
+      email: normalizedEmail,
+      otp,
+      expiresAt: { $gt: new Date() },
+    }).sort({ createdAt: -1 });
 
     if (!record) {
       return jsonResponse(400, "Invalid or expired OTP");
     }
 
-    await OtpModel.deleteMany({ email });
+    await OtpModel.deleteMany({ email: normalizedEmail });
 
     return jsonResponse(200, "OTP verified successfully", { email });
   } catch (error) {
