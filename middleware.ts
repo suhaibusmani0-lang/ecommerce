@@ -8,6 +8,7 @@ const SECRET = new TextEncoder().encode(
 );
 
 const AUTH_PAGES = ["/auth/login", "/auth/register", "/auth/forgot-password"];
+const PUBLIC_PAGES = ["/"]; // Pages accessible without login
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -30,7 +31,7 @@ export async function middleware(request: NextRequest) {
       response.cookies.set("session", "", { maxAge: 0, path: "/" });
 
       // If accessing a protected page without valid session, redirect to login
-      if (!AUTH_PAGES.includes(pathname) && pathname.startsWith("/auth") === false) {
+      if (!AUTH_PAGES.includes(pathname) && pathname.startsWith("/auth") === false && !PUBLIC_PAGES.includes(pathname)) {
         return NextResponse.redirect(new URL("/auth/login", request.url));
       }
 
@@ -38,9 +39,9 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // No token — if accessing a protected page (non-auth, non-API), redirect to login
+  // No token — if accessing a protected page (non-auth, non-API, non-public), redirect to login
   // API routes are left unauthenticated here; each API route must check its own auth
-  if (!AUTH_PAGES.includes(pathname) && pathname.startsWith("/auth") === false && pathname.startsWith("/api") === false) {
+  if (!AUTH_PAGES.includes(pathname) && pathname.startsWith("/auth") === false && pathname.startsWith("/api") === false && !PUBLIC_PAGES.includes(pathname)) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 

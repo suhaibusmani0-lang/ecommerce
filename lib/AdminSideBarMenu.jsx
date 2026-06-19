@@ -7,7 +7,9 @@ import { LuUserRound } from "react-icons/lu";
 import { IoMdStarOutline } from "react-icons/io";
 import { MdOutlinePermMedia } from "react-icons/md";
 import { RiCoupon2Line } from "react-icons/ri";
-import { ADMIN_DASHBOARD} from "@/routes/adminPanelRoutes"
+import { ADMIN_DASHBOARD, ADMIN_MEDIA_SHOW } from "@/routes/adminPanelRoutes"
+ 
+
 export const AdminSideBarMenu={
     dashboard:{title:"Dashboard",icon:<AiOutlineDashboard/>,url: ADMIN_DASHBOARD},
     categories:{title:"Categories",icon:<BiCategory/>, url:"#",
@@ -44,5 +46,5 @@ export const AdminSideBarMenu={
     orders:{title:"Orders",icon:<MdOutlineShoppingBag/>,url:"#"},
     customers:{title:"Customers",icon:<LuUserRound/>,url:"#"},
     reviews:{title:"Reviews",icon:<IoMdStarOutline/>,url:"#"},
-    media:{title:"Media",icon:<MdOutlinePermMedia/>,url:"#"},
+    media:{title:"Media",icon:<MdOutlinePermMedia/>, url: ADMIN_MEDIA_SHOW,},
 }

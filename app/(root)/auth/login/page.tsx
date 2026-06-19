@@ -71,6 +71,22 @@ const LoginPage = () => {
   const [otpmail, setOtpMail] = React.useState("");
   const [error, setError] = React.useState("");
 
+  const handleResendOtp = async (email: string) => {
+    try {
+      const res = await fetch("/api/auth/resend-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result?.message || "Failed to resend OTP");
+      showToast("success", result?.message || "OTP resent successfully");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to resend OTP";
+      showToast("error", message);
+    }
+  };
+
   const heandotpVarification = async (data: { otp: string }) => {
     setLoading(true);
 
@@ -264,7 +280,7 @@ const LoginPage = () => {
             <p>We have sent an OTP to your email. Please enter it to verify your account.</p>
           </div>
               </CardHeader>
-              <OtpVarification email={otpmail} onSubmit={heandotpVarification} loading={loading} />
+              <OtpVarification email={otpmail} onSubmit={heandotpVarification} onResend={handleResendOtp} loading={loading} />
               </div>
               </>
             ) 

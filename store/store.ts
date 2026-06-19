@@ -2,11 +2,12 @@ import { combineReducers } from "redux";
 import { persistStore, persistReducer } from "redux-persist";
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./reducer/authReducer";
+import cartReducer from "./reducer/cartReducer";
 import createWebStorage from "redux-persist/lib/storage/createWebStorage";
 
 const createNoopStorage = () => ({
   getItem: () => Promise.resolve(null),
-  setItem: (_key, value) => Promise.resolve(value),
+  setItem: (_key: string, value: string) => Promise.resolve(value),
   removeItem: () => Promise.resolve(),
 });
 
@@ -17,12 +18,10 @@ const storage =
 
 const rootReducer = combineReducers({
   authStore: authReducer,
+  cart: cartReducer,
 });
 
-const persistConfig = {
-  key: "root",
-  storage,
-};
+const persistConfig = { key: "root", storage };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
@@ -33,3 +32,4 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store);
+export type RootState = ReturnType<typeof rootReducer>;

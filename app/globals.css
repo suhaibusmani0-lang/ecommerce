@@ -134,6 +134,16 @@
 :root {
   --font-heading: var(--font-playfair);
   --font-body: var(--font-raleway);
+  --font-display: var(--font-raleway);
+  --font-serif: var(--font-playfair);
+
+  /* Brand tokens */
+  --brand-cream: #FAF7F2;
+  --brand-ink: #1A1A1A;
+  --brand-taupe: #8B6F52;
+  --brand-terracotta: #C17A56;
+  --brand-cream-deep: #F1EBE1;
+  --brand-border: #E3D9C9;
 }
 
 /* Body text */
