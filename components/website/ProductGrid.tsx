@@ -44,7 +44,7 @@ async function getProducts({
     const url = `${baseUrl}/api/products?${params.toString()}`;
     
     const res = await fetch(url, {
-      cache: "no-store",
+      //cache: "no-store",
       next: {
         revalidate: 3600, // Revalidate every hour
       },

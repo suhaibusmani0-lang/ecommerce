@@ -6,7 +6,7 @@ async function getProducts(page: number = 1, sort: string = "newest") {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products?page=${page}&sort=${sort}`,
     {
-      cache: "no-store",
+     // cache: "no-store",
     }
   );
 

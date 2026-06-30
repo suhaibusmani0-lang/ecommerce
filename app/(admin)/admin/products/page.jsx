@@ -200,28 +200,28 @@ export default function ProductsPage() {
 
   const confirmDelete = useCallback(async () => {
     if (!productToDelete) return;
+    setDeletingId(productToDelete._id);
     try {
       const res = await fetch(`/api/admin/products/${productToDelete._id}`, {
         method: "DELETE",
       });
-  
+
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         showToast("error", data.message || "Failed to delete product");
         return;
       }
-  
-      const data = await res.json();
-  
-      // ✅ Show toast ONLY after success is confirmed
-      showToast("success", data.message || `Product '${productToDelete.name}' moved to recycle bin`);
-  
+
+      showToast("success", data.message || `'${productToDelete.name}' moved to recycle bin`);
       setProducts((prev) => prev.filter((p) => p._id !== productToDelete._id));
       setDeleteModalOpen(false);
       setProductToDelete(null);
     } catch (err) {
       console.error("[Delete Error]:", err);
-        showToast("error", err.message);
+      showToast("error", "Something went wrong. Please try again.");
+    } finally {
+      setDeletingId(null);
     }
   }, [productToDelete]);
 
@@ -471,7 +471,7 @@ export default function ProductsPage() {
                   <td className="p-3">
                     <div className="flex items-center gap-1.5">
                       <Link
-                        href={`${ADMIN_EDIT_PRODUCT}/${item._id}`}
+                        href={ADMIN_EDIT_PRODUCT(item._id)}
                         className="p-1.5 text-gray-600 hover:text-[#C17A56] hover:bg-[#C17A56]/10 rounded transition-colors"
                         title="Edit product"
                       >

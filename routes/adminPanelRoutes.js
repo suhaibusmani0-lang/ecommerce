@@ -10,7 +10,7 @@ export const ADMIN_EDIT_CATEGORY = (id) => `/admin/categories/${id}`;
 export const ADMIN_PRODUCTS = "/admin/products";
 export const ADMIN_ADD_PRODUCT = "/admin/products/add";
 export const ADMIN_RECYCLE_BIN_PRODUCTS = "/admin/products/recycle-bin";
-export const ADMIN_EDIT_PRODUCT = (id) => `/admin/products/${id}`;
+export const ADMIN_EDIT_PRODUCT = (id) => `/admin/products/edit/${id}`;
 
 // Coupons
 export const ADMIN_COUPONS = "/admin/coupons";

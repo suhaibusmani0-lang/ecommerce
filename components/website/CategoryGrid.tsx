@@ -19,7 +19,7 @@ async function getCategories(): Promise<Category[]> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const res = await fetch(`${baseUrl}/api/categories`, {
-      cache: "no-store",
+     // cache: "no-store",
       next: {
         revalidate: 3600, // Revalidate every hour
       },

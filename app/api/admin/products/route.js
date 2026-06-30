@@ -22,7 +22,7 @@ export async function GET(req) {
     const isNewArrival = searchParams.get("isNewArrival") === "true";
     const isBestSeller = searchParams.get("isBestSeller") === "true";
 
-    const query = {};
+    const query = { isDeleted: { $ne: true } };
     const status = searchParams.get("status");
     if (status === "active") query.isActive = true;
     else if (status === "inactive") query.isActive = false;

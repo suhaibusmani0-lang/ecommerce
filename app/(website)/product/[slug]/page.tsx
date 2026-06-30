@@ -8,9 +8,9 @@ import ReviewForm from "@/components/website/ReviewForm";
 
 async function getProduct(slug: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products/${slug}`, {
-    cache: "no-store",
+    //cache: "no-store",
   });
-  if (!res.ok) return null;
+  // if (!res.ok) return null;
   const data = await res.json();
   return data.data;
 }
@@ -35,7 +35,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <nav className="flex items-center gap-2 text-sm text-[#1A1A1A]/60 mb-8">
           <Link href="/" className="hover:text-[#C17A56]">Home</Link>
           <span>/</span>
-          <Link href={`/category/${product.category.slug}`} className="hover:text-[#C17A56]">{product.category.name}</Link>
+          {product.category?.slug ? (
+            <Link href={`/category/${product.category.slug}`} className="hover:text-[#C17A56]">{product.category.name}</Link>
+          ) : (
+            <span>{product.category?.name || "Uncategorized"}</span>
+          )}
           <span>/</span>
           <span className="text-[#1A1A1A]">{product.name}</span>
         </nav>
@@ -45,7 +49,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <div className="space-y-6">
             <div>
-              <p className="text-sm text-[#C17A56] font-medium mb-2">{product.category.name}</p>
+              <p className="text-sm text-[#C17A56] font-medium mb-2">{product.category?.name || ""}</p>
               <h1 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-2">{product.name}</h1>
               <p className="text-sm text-[#1A1A1A]/60">SKU: {product.sku}</p>
             </div>

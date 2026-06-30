@@ -103,17 +103,19 @@ export default function EditProductPage() {
   useEffect(() => {
     if (!id) return;
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     const fetchProduct = async () => {
       try {
         setFetching(true);
-        abortControllerRef.current = new AbortController();
         
         const res = await fetch(`/api/admin/products/${id}`, {
-          signal: abortControllerRef.current.signal,
+          signal: controller.signal,
         });
         
         if (!res.ok) {
-          throw new Error("Failed to fetch product");
+          throw new Error(`Server error: ${res.status}`);
         }
         
         const data = await res.json();
@@ -128,7 +130,7 @@ export default function EditProductPage() {
             shortDescription: product.shortDescription || "",
             price: product.price?.toString() || "",
             salePrice: product.salePrice?.toString() || "",
-            category: product.category?._id || "",
+            category: product.category?._id || product.category || "",
             badge: product.badge || "",
             stock: product.stock?.toString() || "0",
             images: product.images || [],
@@ -144,25 +146,23 @@ export default function EditProductPage() {
         }
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
-          return;
+          return; // Component unmounted — ignore
         }
         console.error("Error fetching product:", error);
-        setSubmitError("Failed to load product");
-        setTimeout(() => router.push("/admin/products"), 2000);
+        setSubmitError("Failed to load product data");
       } finally {
-        setFetching(false);
+        if (!controller.signal.aborted) {
+          setFetching(false);
+        }
       }
     };
 
     fetchProduct();
 
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      newImagePreviews.forEach(preview => URL.revokeObjectURL(preview));
+      controller.abort();
     };
-  }, [id, router]);
+  }, [id]);
 
   const validateForm = useCallback((): boolean => {
     const newErrors: FormErrors = {};
@@ -294,8 +294,8 @@ export default function EditProductPage() {
   };
 
   const removeNewImage = (index: number) => {
-    setNewImages((prev) => prev.filter((_, i) => i !== index));
     URL.revokeObjectURL(newImagePreviews[index]);
+    setNewImages((prev) => prev.filter((_, i) => i !== index));
     setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
     setIsDirty(true);
   };
@@ -313,12 +313,13 @@ export default function EditProductPage() {
   const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      const firstErrorField = Object.keys(errors)[0];
-      const element = document.querySelector(`[name="${firstErrorField}"]`);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+    const isValid = validateForm();
+    if (!isValid) {
+      // Use a short delay to let setErrors update before reading errors
+      setTimeout(() => {
+        const firstErrorEl = document.querySelector("[data-error='true']");
+        if (firstErrorEl) firstErrorEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
       return;
     }
 

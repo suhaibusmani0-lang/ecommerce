@@ -51,7 +51,8 @@ export default function EditProductPage() {
         ]);
         if (!productRes.ok) throw new Error("Failed to fetch product");
         const productData = await productRes.json();
-        const product = productData.data.product;
+        if (!productData.ok || !productData.data) throw new Error(productData.message || "Product not found");
+        const product = productData.data;
 
         const catData = await catRes.json();
         setCategories(catData.data || []);
