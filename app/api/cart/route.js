@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { connectDB } from "@/lib/databaseConnection";
 import { getSession } from "@/lib/auth";
 import CartModel from "@/models/Cart.model";
@@ -35,15 +36,27 @@ export async function POST(req) {
     const session = await getSession();
     if (!session?.userId) return jsonRes(401, "Not authenticated");
 
-    const { productId, qty = 1, variant: rawVariant = {} } = await req.json();
-    if (!productId) return jsonRes(400, "Product ID is required");
+    const payload = await req.json().catch(() => null);
+    if (!payload || typeof payload !== "object") {
+      return jsonRes(400, "Invalid request body");
+    }
+
+    const { productId, qty = 1, variant: rawVariant = {} } = payload;
+    if (!productId || typeof productId !== "string" || !mongoose.Types.ObjectId.isValid(productId)) {
+      return jsonRes(400, "Valid product ID is required");
+    }
+
+    const quantity = Number(qty);
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      return jsonRes(400, "Quantity must be a positive integer");
+    }
 
     const variant = normalizeVariant(rawVariant);
 
     const product = await ProductModel.findById(productId);
     if (!product) return jsonRes(404, "Product not found");
     if (!product.isActive) return jsonRes(400, "Product is not available");
-    if (product.stock < qty) return jsonRes(400, "Insufficient stock");
+    if (product.stock < quantity) return jsonRes(400, "Insufficient stock");
 
     let cart = await CartModel.findOne({ user: session.userId });
     if (!cart) {
@@ -58,7 +71,7 @@ export async function POST(req) {
     });
 
     if (existingItemIndex > -1) {
-      const newQty = cart.items[existingItemIndex].qty + qty;
+      const newQty = cart.items[existingItemIndex].qty + quantity;
       if (product.stock < newQty) return jsonRes(400, "Insufficient stock");
       cart.items[existingItemIndex].qty = newQty;
     } else {
@@ -67,7 +80,7 @@ export async function POST(req) {
         name: product.name,
         image: product.images[0]?.url || "",
         price: product.salePrice ?? product.price,
-        qty,
+        qty: quantity,
         variant,
       });
     }
@@ -76,7 +89,8 @@ export async function POST(req) {
     await cart.populate("items.product", "name images price stock slug isActive");
     return jsonRes(200, "Item added to cart", cart);
   } catch (e) {
-    return jsonRes(500, e.message);
+    console.error("POST /api/cart error:", e);
+    return jsonRes(500, e instanceof Error ? e.message : "Internal Server Error");
   }
 }
 

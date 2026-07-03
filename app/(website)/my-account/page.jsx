@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { User, ShoppingBag, MapPin, Settings, LogOut, Package, Heart, CreditCard, ChevronRight, Edit2, Check } from "lucide-react";
 import { logout } from "@/store/reducer/authReducer";
 import { persistor } from "@/store/store";
 
 export default function MyAccount() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
@@ -16,9 +18,13 @@ export default function MyAccount() {
   const auth = useSelector((s) => s.authStore.auth);
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth) {
+      setLoading(false);
+      router.push("/auth/login");
+      return;
+    }
     fetchData();
-  }, [activeTab, auth]);
+  }, [activeTab, auth, router]);
 
   const fetchData = async () => {
     if (!auth) return;
@@ -56,6 +62,29 @@ export default function MyAccount() {
     dispatch(logout());
     await persistor.purge();
     window.location.href = "/";
+  };
+
+  const handleRemoveFromWishlist = async (productId) => {
+    if (!auth) return;
+
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/wishlist?productId=${productId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        console.error("Failed to remove from wishlist:", data.message || res.statusText);
+        return;
+      }
+
+      setWishlist(data.data?.items || wishlist.filter((item) => item.product?._id !== productId));
+    } catch (error) {
+      console.error("Error removing wishlist item:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const tabs = [
@@ -276,7 +305,7 @@ export default function MyAccount() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {wishlist.map((item) => (
                       <div key={item._id} className="border border-gray-100 rounded-xl overflow-hidden hover:border-[#C17A56]/30 transition-colors group">
-                        <div className="aspect-square bg-gray-50 relative">
+                        <div className="relative aspect-square bg-gray-50">
                           {item.product?.images?.[0]?.url ? (
                             <img
                               src={item.product.images[0].url}
@@ -288,6 +317,13 @@ export default function MyAccount() {
                               <Package size={48} />
                             </div>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFromWishlist(item.product?._id)}
+                            className="absolute top-3 right-3 rounded-full bg-white p-2 shadow-sm text-[#1A1A1A] hover:bg-[#C17A56] hover:text-white transition-colors"
+                          >
+                            Remove
+                          </button>
                         </div>
                         <div className="p-4">
                           <h3 className="font-medium text-[#1A1A1A] text-sm">{item.product?.name || "Product"}</h3>

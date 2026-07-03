@@ -22,9 +22,10 @@ const cartSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-cartSchema.pre("save", function(next) {
-  this.totalAmount = this.items.reduce((sum, item) => sum + (item.price * item.qty), 0) - (this.coupon?.discount || 0);
-  next();
+cartSchema.pre("save", async function () {
+  this.totalAmount =
+    this.items.reduce((sum, item) => sum + item.price * item.qty, 0) -
+    (this.coupon?.discount || 0);
 });
 
 const CartModel = mongoose.models.Cart || mongoose.model("Cart", cartSchema, "carts");

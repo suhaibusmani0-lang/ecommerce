@@ -84,125 +84,126 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="bg-white shadow-lg rounded-xl p-6 w-[450px] boxshawdow-lg">
-        {/* Logo */}
-        <div className="flex justify-center mb-4">
-          <Image
-            src="/assets/images/logo-black1.png"
-            alt="E-commerce Logo"
-            width={200}
-            height={100}
-            priority
-            style={{ height: "auto" }}
-          />
-        </div>
-
-        {/* Heading */}
-        <h1 className="text-2xl font-bold text-center mb-2">
-          Create Account
-        </h1>
-
-        <p className="text-center text-sm mb-4">
-          <span className="text-black-600 px-2 py-1 rounded">
-            Create new account by filling out the form below.
-          </span>
-        </p>
-
-        <form
-          onSubmit={form.handleSubmit(handleSubmitRegister)}
-          className="space-y-3"
-        >
-          {/* Full Name */}
-          <div>
-            <label className="text-sm">Full Name</label>
-            <input
-              {...form.register("name")}
-              placeholder="Enter your name"
-              className="w-full border rounded px-3 py-2 mt-1"
-            />
-            {form.formState.errors.name && (
-              <p className="text-red-500 text-xs mt-1">
-                {form.formState.errors.name.message}
-              </p>
-            )}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="text-sm">Email</label>
-            <input
-              type="email"
-              {...form.register("email")}
-              placeholder="example@gmail.com"
-              className="w-full border rounded px-3 py-2 mt-1"
-            />
-            {form.formState.errors.email && (
-              <p className="text-red-500 text-xs mt-1">
-                {form.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="text-sm">Password</label>
-            <input
-              type="password"
-              {...form.register("password")}
-              placeholder="******"
-              className="w-full border rounded px-3 py-2 mt-1"
-            />
-            {form.formState.errors.password && (
-              <p className="text-red-500 text-xs mt-1">
-                {form.formState.errors.password.message}
-              </p>
-            )}
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="text-sm">Confirm Password</label>
-            <input
-              type="password"
-              {...form.register("confirmPassword")}
-              placeholder="******"
-              className="w-full border rounded px-3 py-2 mt-1"
-            />
-            {form.formState.errors.confirmPassword && (
-              <p className="text-red-500 text-xs mt-1">
-                {form.formState.errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <p className="text-red-500 text-sm text-center">
-              {error}
-            </p>
-          )}
-
-          {/* Submit Button */}
-          <ButtonLoading
-            type="submit"
-            loading={loading}
-            text="Create Account"
-            className="cursor-pointer"
-          />
-
-          {/* Login Link */}
-          <p className="text-center text-sm mt-2">
-            Already have an account?{" "}
-            <Link
-              href="/auth/login"
-              className="text-secondary underline"
-            >
-              Login
-            </Link>
-          </p>
-        </form>
-      </div>
+<div className="flex justify-center items-center min-h-screen px-4 sm:px-6">
+  <div className="bg-white shadow-lg rounded-xl p-4 sm:p-6 w-full max-w-md boxshadow-lg">
+    {/* Logo */}
+    <div className="flex justify-center mb-4">
+      <Image
+        src="/assets/images/logo-black1.png"
+        alt="E-commerce Logo"
+        width={200}
+        height={100}
+        priority
+        style={{ height: "auto" }}
+        className="max-w-[150px] sm:max-w-[200px]"
+      />
     </div>
+
+    {/* Heading */}
+    <h1 className="text-xl sm:text-2xl font-bold text-center mb-2">
+      Create Account
+    </h1>
+
+    <p className="text-center text-xs sm:text-sm mb-4">
+      <span className="text-black-600 px-2 py-1 rounded">
+        Create new account by filling out the form below.
+      </span>
+    </p>
+
+    <form
+      onSubmit={form.handleSubmit(handleSubmitRegister)}
+      className="space-y-3 sm:space-y-4"
+    >
+      {/* Full Name */}
+      <div>
+        <label className="text-sm sm:text-base">Full Name</label>
+        <input
+          {...form.register("name")}
+          placeholder="Enter your name"
+          className="w-full border rounded px-3 py-2 mt-1 text-sm sm:text-base"
+        />
+        {form.formState.errors.name && (
+          <p className="text-red-500 text-xs mt-1">
+            {form.formState.errors.name.message}
+          </p>
+        )}
+      </div>
+
+      {/* Email */}
+      <div>
+        <label className="text-sm sm:text-base">Email</label>
+        <input
+          type="email"
+          {...form.register("email")}
+          placeholder="example@gmail.com"
+          className="w-full border rounded px-3 py-2 mt-1 text-sm sm:text-base"
+        />
+        {form.formState.errors.email && (
+          <p className="text-red-500 text-xs mt-1">
+            {form.formState.errors.email.message}
+          </p>
+        )}
+      </div>
+
+      {/* Password */}
+      <div>
+        <label className="text-sm sm:text-base">Password</label>
+        <input
+          type="password"
+          {...form.register("password")}
+          placeholder="******"
+          className="w-full border rounded px-3 py-2 mt-1 text-sm sm:text-base"
+        />
+        {form.formState.errors.password && (
+          <p className="text-red-500 text-xs mt-1">
+            {form.formState.errors.password.message}
+          </p>
+        )}
+      </div>
+
+      {/* Confirm Password */}
+      <div>
+        <label className="text-sm sm:text-base">Confirm Password</label>
+        <input
+          type="password"
+          {...form.register("confirmPassword")}
+          placeholder="******"
+          className="w-full border rounded px-3 py-2 mt-1 text-sm sm:text-base"
+        />
+        {form.formState.errors.confirmPassword && (
+          <p className="text-red-500 text-xs mt-1">
+            {form.formState.errors.confirmPassword.message}
+          </p>
+        )}
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <p className="text-red-500 text-sm text-center">
+          {error}
+        </p>
+      )}
+
+      {/* Submit Button */}
+      <ButtonLoading
+        type="submit"
+        loading={loading}
+        text="Create Account"
+        className="cursor-pointer w-full text-sm sm:text-base py-2 sm:py-3"
+      />
+
+      {/* Login Link */}
+      <p className="text-center text-xs sm:text-sm mt-2">
+        Already have an account?{" "}
+        <Link
+          href="/auth/login"
+          className="text-secondary underline"
+        >
+          Login
+        </Link>
+      </p>
+    </form>
+  </div>
+</div>
   );
 }
