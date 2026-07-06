@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/databaseConnection";
 import { getSession } from "@/lib/auth";
+import { getFallbackShipping, getShiprocketShippingQuote } from "@/lib/shiprocket";
 import OrderModel from "@/models/Order.model";
 
 function jsonRes(status, message, data = null) {
@@ -22,7 +23,8 @@ export async function POST(req) {
     }
 
     const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
-    const shipping = subtotal >= 2999 ? 0 : 99;
+    const shiprocketQuote = await getShiprocketShippingQuote({ pincode: shippingAddress.pincode, items });
+    const shipping = shiprocketQuote?.shippingCharge ?? getFallbackShipping(subtotal);
     let discount = 0;
 
     // Basic coupon check
@@ -58,6 +60,9 @@ export async function POST(req) {
       })),
       totalAmount,
       shippingAddress,
+      shippingCost: shipping,
+      shippingMethod: shiprocketQuote?.shippingMethod || "standard",
+      courierName: shiprocketQuote?.courierName || "Standard",
       status: "Pending",
       paymentStatus: "Unpaid",
     });
@@ -66,9 +71,6 @@ export async function POST(req) {
       const productId = item.productId || item.id;
       await ProductModel.findByIdAndUpdate(productId, { $inc: { stock: -item.qty } });
     }
-
-    const CartModel = (await import("@/models/Cart.model")).default;
-    await CartModel.findOneAndUpdate({ user: session.userId }, { items: [], totalAmount: 0 });
 
     return jsonRes(201, "Order placed successfully", {
       orderId: order._id,

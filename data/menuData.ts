@@ -713,7 +713,7 @@ export const megaMenuData: MenuItem[] = [
   //   ],
   // },
   {
-    label: "contact",
+    label: "Contact Us",
     href: "/contact",
     categories: [],
   },

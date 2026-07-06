@@ -59,18 +59,18 @@ export default function Header() {
   return (
     <>
       {/* Top Header */}
-      <div className="border-b bg-white">
+      <div className="border-b bg-white hidden">
         <div className="max-w-[1400px] mx-auto flex justify-between items-center px-4 sm:px-5 py-2 text-[12px] sm:text-[13px]">
-          <div className="flex gap-4 sm:gap-8">
+          <div className="flex gap-4 sm:gap-8 hidden">
             <Link href="/brands" className="hidden sm:inline">Brands</Link>
             <Link href="/gift-cards" className="hidden sm:inline">Gift Cards</Link>
             <Link href="/careers" className="hidden sm:inline">Careers</Link>
           </div>
 
-          <div className="hidden md:flex gap-6 lg:gap-8">
+          <div className="hidden md:flex gap-6 lg:gap-8 hidden">
             <Link
               href="/stores"
-              className="flex items-center gap-2 hover:text-gray-600"
+              className="flex items-center gap-2 hover:text-gray-600 hidden"
             >
               <MapPin size={14} />
               <span className="hidden lg:inline">Find A Store</span>
@@ -265,7 +265,7 @@ export default function Header() {
           <Link
             href="/stores"
             onClick={() => setMobileMenu(false)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hidden"
           >
             <MapPin size={18} />
             Find A Store
@@ -274,7 +274,7 @@ export default function Header() {
           <Link
             href="/track-order"
             onClick={() => setMobileMenu(false)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hidden"
           >
             <Package size={18} />
             Track Order

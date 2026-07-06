@@ -15,7 +15,7 @@ export default function Home() {
       <HomePageCenterItem />
       <ProductGrid />
       
-      <HomePageValues />
+      
       <HomePageDesignCrew imageSrc="/assets/images/gettotouch.png"
   imageAlt="Interior design consultation"
   />

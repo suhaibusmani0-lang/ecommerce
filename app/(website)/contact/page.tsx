@@ -40,23 +40,23 @@ export default function ContactPage() {
       {/* Contact Cards */}
       <section className="py-24">
         <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 icon: <Phone size={28} />,
                 title: "Call Us",
-                value: "+971 50 123 4567",
+                value: "+91 8595124718",
               },
               {
                 icon: <Mail size={28} />,
                 title: "Email Us",
-                value: "info@cosmopolitanxccessories.com",
+                value: "info@cxshop.com",
               },
-              {
-                icon: <MapPin size={28} />,
-                title: "Visit Us",
-                value: "Dubai, UAE",
-              },
+              // {
+              //   icon: <MapPin size={28} />,
+              //   title: "Visit Us",
+              //   value: "Dubai, UAE",
+              // },
               {
                 icon: <Clock size={28} />,
                 title: "Working Hours",
@@ -65,7 +65,7 @@ export default function ContactPage() {
             ].map((item, index) => (
               <div
                 key={index}
-                className="bg-white border rounded-3xl p-8 text-center shadow-md hover:shadow-xl transition"
+                className="bg-white border rounded-4xl p-8 text-center shadow-md hover:shadow-xl transition"
               >
                 <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-[#000]/10 flex items-center justify-center text-[#000]">
                   {item.icon}
@@ -146,7 +146,7 @@ export default function ContactPage() {
                   <Phone />
                   <div>
                     <h4 className="font-semibold">Phone</h4>
-                    <p>+971 50 123 4567</p>
+                    <p>+91 8595124718</p>
                   </div>
                 </div>
 
@@ -154,11 +154,11 @@ export default function ContactPage() {
                   <Mail />
                   <div>
                     <h4 className="font-semibold">Email</h4>
-                    <p>info@cosmopolitanxccessories.com</p>
+                    <p>info@cxshop.com</p>
                   </div>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 hidden">
                   <MapPin />
                   <div>
                     <h4 className="font-semibold">Location</h4>

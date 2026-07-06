@@ -233,7 +233,7 @@ export default function AboutPage() {
       </section>
 
       {/* Team */}
-      <section className="bg-slate-50 py-24">
+      <section className="bg-slate-50 py-24 hidden">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">Meet Our Team</h2>

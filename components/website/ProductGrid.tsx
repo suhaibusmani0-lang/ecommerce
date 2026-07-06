@@ -33,7 +33,7 @@ async function getProducts({
   category?: string;
 } = {}): Promise<Product[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     
     // Build query parameters
     const params = new URLSearchParams();

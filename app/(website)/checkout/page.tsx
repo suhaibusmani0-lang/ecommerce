@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -37,15 +37,59 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [shipping, setShipping] = useState(0);
+  const [shippingMeta, setShippingMeta] = useState<{ courierName?: string; shippingMethod?: string } | null>(null);
 
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-  const shipping = subtotal >= 2999 ? 0 : 99;
-  const total = subtotal + shipping - discount;
-
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { name: auth?.name || "", email: auth?.email || "", phone: "", address: "", city: "", state: "", pincode: "" },
   });
+
+  const pincode = form.watch("pincode");
+  const total = subtotal + shipping - discount;
+
+  useEffect(() => {
+    const fallbackShipping = subtotal >= 2999 ? 0 : 99;
+    setShipping(fallbackShipping);
+    setShippingMeta(null);
+  }, [subtotal]);
+
+  useEffect(() => {
+    if (!pincode || pincode.length !== 6 || !items.length) {
+      setShipping(subtotal >= 2999 ? 0 : 99);
+      setShippingMeta(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await fetch("/api/shipping/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pincode, items }),
+          signal: controller.signal,
+        });
+        const data = await res.json();
+        if (!controller.signal.aborted && data.ok && typeof data.data?.shippingCharge === "number") {
+          setShipping(data.data.shippingCharge);
+          setShippingMeta({ courierName: data.data.courierName, shippingMethod: data.data.shippingMethod });
+        } else {
+          setShipping(subtotal >= 2999 ? 0 : 99);
+          setShippingMeta(null);
+        }
+      } catch {
+        setShipping(subtotal >= 2999 ? 0 : 99);
+        setShippingMeta(null);
+      }
+    }, 400);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [items, pincode, subtotal]);
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -65,24 +109,91 @@ export default function CheckoutPage() {
     }
   };
 
+  const loadRazorpayScript = () => new Promise<void>((resolve, reject) => {
+    if (typeof window === "undefined") return reject(new Error("Browser only"));
+    if ((window as any).Razorpay) return resolve();
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Unable to load Razorpay"));
+    document.body.appendChild(script);
+  });
+
   const handleSubmit = async (formData: FormData) => {
     if (!auth) { router.push(`/auth/login?callback=/checkout`); return; }
     if (!items.length) { setError("Your cart is empty"); return; }
+
     setLoading(true);
     setError("");
+
     try {
-      const res = await fetch("/api/orders", {
+      const orderRes = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items, shippingAddress: formData, couponCode: couponCode || undefined }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-      dispatch(clearCart());
-      router.push(`/checkout/success?orderId=${data.data.orderId}`);
+      const orderData = await orderRes.json();
+      if (!orderRes.ok) throw new Error(orderData.message || "Unable to create order");
+
+      await loadRazorpayScript();
+
+      const paymentRes = await fetch("/api/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: orderData.data.orderId, amount: orderData.data.totalAmount }),
+      });
+      const paymentData = await paymentRes.json();
+      if (!paymentRes.ok) throw new Error(paymentData.message || "Unable to initialize payment");
+
+      const options = {
+        key: paymentData.data.key,
+        amount: paymentData.data.amount,
+        currency: paymentData.data.currency,
+        name: "Ecommerce",
+        description: `Order #${String(orderData.data.orderId).slice(-6).toUpperCase()}`,
+        order_id: paymentData.data.razorpayOrderId,
+        prefill: {
+          name: formData.name,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        theme: { color: "#C17A56" },
+        handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          try {
+            const verifyRes = await fetch("/api/razorpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId: orderData.data.orderId,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok) throw new Error(verifyData.message || "Payment verification failed");
+            dispatch(clearCart());
+            router.push(`/checkout/success?orderId=${orderData.data.orderId}`);
+          } catch (e) {
+            setError(e instanceof Error ? e.message : "Payment verification failed");
+            setLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+            setError("Payment cancelled. You can try again.");
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+      setLoading(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
       setLoading(false);
     }
   };
@@ -158,16 +269,16 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Payment — COD only */}
+            {/* Payment */}
             <div className="bg-white rounded-2xl border border-[#E3D9C9] p-5 sm:p-6">
               <h2 className="text-sm tracking-widest uppercase font-semibold text-[#1A1A1A] mb-5">Payment Method</h2>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="radio" checked readOnly className="accent-[#C17A56]" />
+              <div className="flex items-start gap-3 rounded-xl border border-[#E3D9C9] bg-[#F8F3EA] p-4">
+                <input type="radio" checked readOnly className="accent-[#C17A56] mt-1" />
                 <div>
-                  <p className="text-sm font-medium text-[#1A1A1A]">Cash on Delivery</p>
-                  <p className="text-xs text-[#8B6F52]">Pay when your order arrives</p>
+                  <p className="text-sm font-medium text-[#1A1A1A]">Pay securely with Razorpay</p>
+                  <p className="text-xs text-[#8B6F52]">Cards, UPI, net banking, and wallet payments supported</p>
                 </div>
-              </label>
+              </div>
             </div>
 
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
@@ -177,7 +288,7 @@ export default function CheckoutPage() {
               disabled={loading}
               className="w-full bg-[#1A1A1A] text-white text-xs tracking-widest uppercase py-4 rounded-xl hover:bg-[#C17A56] transition-colors disabled:opacity-60 font-semibold"
             >
-              {loading ? "Placing Order…" : `Place Order · ${formatPrice(total)}`}
+              {loading ? "Processing Payment…" : `Pay & Place Order · ${formatPrice(total)}`}
             </button>
 
             {!auth && (
@@ -219,7 +330,12 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-sm text-[#8B6F52]">
                   <span>Shipping</span>
-                  <span className={shipping === 0 ? "text-green-600 font-medium" : ""}>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
+                  <div className="text-right">
+                    <div className={shipping === 0 ? "text-green-600 font-medium" : ""}>{shipping === 0 ? "FREE" : formatPrice(shipping)}</div>
+                    {shippingMeta?.courierName && (
+                      <div className="text-[11px] text-[#8B6F52]">via {shippingMeta.courierName}</div>
+                    )}
+                  </div>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-sm text-green-600 font-medium">

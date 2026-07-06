@@ -7,7 +7,7 @@ import ProductActions from "@/components/website/ProductActions";
 import ReviewForm from "@/components/website/ReviewForm";
 
 async function getProduct(slug: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products/${slug}`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/products/${slug}`, {
     //cache: "no-store",
   });
   // if (!res.ok) return null;

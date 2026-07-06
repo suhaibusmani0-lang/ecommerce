@@ -49,7 +49,7 @@ export async function POST(request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const verificationToken = crypto.randomUUID();
-    const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/auth/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+    const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`;
 
     const newUser = await UserModel.create({
       name,
