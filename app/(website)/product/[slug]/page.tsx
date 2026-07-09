@@ -30,7 +30,7 @@ async function getProduct(slug: string) {
       .lean();
 
     // 4. Related products fetch karo (same category se)
-    let relatedProducts = [];
+    let relatedProducts: any[] = [];
     if (product.category) {
       relatedProducts = await Product.find({
         category: product.category._id || product.category,
