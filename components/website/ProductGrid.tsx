@@ -1,5 +1,8 @@
 import ProductCard from "./ProductCard";
 import { Suspense } from "react";
+import { connectDB } from "@/lib/databaseConnection";
+import ProductModel from "@/models/Product.model";
+import CategoryModel from "@/models/Category.model";
 
 // Define proper types
 interface Product {
@@ -33,30 +36,19 @@ async function getProducts({
   category?: string;
 } = {}): Promise<Product[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    
-    // Build query parameters
-    const params = new URLSearchParams();
-    if (isNewArrival) params.append('isNewArrival', 'true');
-    if (category) params.append('category', category);
-    if (limit) params.append('limit', limit.toString());
-    
-    const url = `${baseUrl}/api/products?${params.toString()}`;
-    
-    const res = await fetch(url, {
-      //cache: "no-store",
-      next: {
-        revalidate: 3600, // Revalidate every hour
-      },
-    });
-    
-    if (!res.ok) {
-      console.error(`Failed to fetch products: ${res.status} ${res.statusText}`);
-      return [];
+    await connectDB();
+    const query: Record<string, unknown> = { isActive: true };
+    if (isNewArrival) query.isNewArrival = true;
+    if (category) {
+      const categoryDoc = await CategoryModel.findOne({ slug: category, isActive: true, isDeleted: false });
+      if (categoryDoc) query.category = categoryDoc._id;
     }
-    
-    const data = await res.json();
-    return data.data?.products || [];
+    const products = await ProductModel.find(query)
+      .populate("category", "name slug")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+    return JSON.parse(JSON.stringify(products));
   } catch (error) {
     console.error("Error fetching products:", error);
     return [];

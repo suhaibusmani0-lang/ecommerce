@@ -1,53 +1,58 @@
 import type { Metadata } from "next";
-import AutoTitle from "@/components/AutoTitle";
 import { Playfair_Display, Raleway } from "next/font/google";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+
 import "./globals.css";
+import "react-toastify/dist/ReactToastify.css";
+
+import AutoTitle from "@/components/AutoTitle";
 import Providers from "@/components/providers/ThemeProvider";
 import GlobalProvider from "@/components/application/GlobalProvider";
+
+import { ToastContainer } from "react-toastify";
 
 export const metadata: Metadata = {
   title: {
     default: "Shop Store",
-    template: "%s |Cosmopolitan Xccessories",
+    template: "%s | Cosmopolitan Xccessories",
   },
   description: "Cosmopolitan Xccessories",
   icons: {
-    icon: "/assets/images/favicon.png",
-    shortcut: "/assets/images/favicon.png",
-    apple: "/assets/images/favicon.png",
+    icon: "/assets/images/favicon.ico",
+    shortcut: "/assets/images/favicon.ico",
+    apple: "/assets/images/favicon.ico",
   },
 };
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
+  display: "swap",
 });
 
 const raleway = Raleway({
   subsets: ["latin"],
   variable: "--font-raleway",
+  display: "swap",
 });
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html
       lang="en"
       suppressHydrationWarning
       className={`${playfair.variable} ${raleway.variable}`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-screen flex flex-col">
         <AutoTitle />
 
         <GlobalProvider>
           <Providers>
             {children}
-            <ToastContainer />
+            <ToastContainer position="top-right" autoClose={3000} />
           </Providers>
         </GlobalProvider>
       </body>

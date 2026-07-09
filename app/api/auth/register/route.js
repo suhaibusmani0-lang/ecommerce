@@ -7,6 +7,10 @@ import crypto from "node:crypto";
 
 const validatedSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
+  phone: z
+    .string()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(16, "Phone number is too long"),
   email: z.string().email("Invalid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
@@ -36,14 +40,16 @@ export async function POST(request) {
       return jsonResponse(400, validatedData.error.errors[0].message);
     }
 
-    const { name, email, password } = validatedData.data;
+    const { name, phone, email, password } = validatedData.data;
 
     const UserModel = (await import("@/models/User.model")).default;
 
-    const existingUser = await UserModel.findOne({ email });
+    const existingUser = await UserModel.findOne({
+      $or: [{ email }, { phone: phone.trim() }],
+    });
 
     if (existingUser) {
-      return jsonResponse(400, "User already exists");
+      return jsonResponse(400, "A user with this email or phone number already exists");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -53,6 +59,7 @@ export async function POST(request) {
 
     const newUser = await UserModel.create({
       name,
+      phone: phone.trim(),
       email,
       password: hashedPassword,
       role: "user",

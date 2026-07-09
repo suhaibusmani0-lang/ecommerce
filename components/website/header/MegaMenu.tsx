@@ -16,7 +16,7 @@ export default function MegaMenu() {
     <div className="hidden lg:block text-[#000]">
       <div className="max-w-[1600px] mx-auto ">
         <NavigationMenu className="max-w-full">
-          <NavigationMenuList className="flex items-center justify-right text-[#000] gap-4">
+          <NavigationMenuList className="flex items-center justify-right text-[#000] text-bold gap-4">
             {megaMenuData.map((item) => (
               <NavigationMenuItem key={item.label}>
                 {item.categories.length > 0 ? (

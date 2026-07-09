@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { showToast } from "@/lib/showToast";
 import { ADMIN_ADD_PRODUCT, ADMIN_EDIT_PRODUCT } from "@/routes/adminPanelRoutes";
+import BulkProductImport from "@/components/admin/BulkProductImport";
 import { 
   Loader2, 
   AlertCircle, 
@@ -14,6 +15,7 @@ import {
   Edit, 
   Trash2, 
   Package,
+  Download,
   DollarSign,
   Tag,
   Eye,
@@ -116,6 +118,7 @@ export default function ProductsPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
   
   const abortControllerRef = useRef(null);
 
@@ -131,7 +134,7 @@ export default function ProductsPage() {
       });
       
       if (!res.ok) {
-        throw new Error("Failed to fetch products");
+        throw Error("Failed to fetch products");
       }
       
       const result = await res.json();
@@ -261,13 +264,23 @@ export default function ProductsPage() {
             {filteredProducts.length !== products.length && ` (showing ${filteredProducts.length})`}
           </p>
         </div>
-        <Link
-          href={ADMIN_ADD_PRODUCT}
-          className="bg-[#1A1A1A] text-white px-4 py-2 rounded-lg hover:bg-[#C17A56] transition-colors flex items-center gap-2 whitespace-nowrap"
-        >
-          <Plus size={18} />
-          Add Product
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={ADMIN_ADD_PRODUCT}
+            className="bg-[#1A1A1A] text-white px-4 py-2 rounded-lg hover:bg-[#C17A56] transition-colors flex items-center gap-2 whitespace-nowrap"
+          >
+            <Plus size={18} />
+            Add Product
+          </Link>
+          <button
+            type="button"
+            onClick={() => setShowBulkImport(true)}
+            className="bg-white text-[#1A1A1A] border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 whitespace-nowrap"
+          >
+            <Download size={18} />
+            Bulk Import
+          </button>
+        </div>
       </div>
 
       {/* Success Message */}
@@ -358,6 +371,31 @@ export default function ProductsPage() {
               </select>
             </div>
           </div>
+        </div>
+      )}
+
+      {showBulkImport && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-[#1A1A1A]">Bulk Product Import</h2>
+              <p className="text-sm text-gray-500">Upload products via Excel and import them into the catalog.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowBulkImport(false)}
+              className="text-sm text-gray-500 hover:text-gray-800"
+            >
+              Close
+            </button>
+          </div>
+          <BulkProductImport
+            onImportComplete={() => {
+              fetchProducts();
+              setShowBulkImport(false);
+              setSuccess("Bulk import completed successfully.");
+            }}
+          />
         </div>
       )}
 

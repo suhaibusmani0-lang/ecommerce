@@ -7,7 +7,8 @@ import cloudinary from "@/lib/cloudinary";
 export async function GET(req, { params }) {
   try {
     await connectDB();
-    const product = await ProductModel.findOne({ _id: params.id, isDeleted: { $ne: true } })
+    const { id } = await params;
+    const product = await ProductModel.findOne({ _id: id, isDeleted: { $ne: true } })
       .populate("category", "_id name");
     if (!product) return jsonRes(404, "Product not found");
     return jsonRes(200, "Product fetched", product);
@@ -19,8 +20,9 @@ export async function GET(req, { params }) {
 export async function PUT(req, { params }) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const existing = await ProductModel.findById(params.id);
+    const existing = await ProductModel.findById(id);
     if (!existing) return jsonRes(404, "Product not found");
 
     const formData = await req.formData();
@@ -83,7 +85,7 @@ export async function PUT(req, { params }) {
 
     updateData.images = currentImages;
 
-    const product = await ProductModel.findByIdAndUpdate(params.id, updateData, { new: true });
+    const product = await ProductModel.findByIdAndUpdate(id, updateData, { new: true, runValidators: false });
     return jsonRes(200, "Product updated", product);
   } catch (e) {
     return jsonRes(500, e.message);
@@ -93,8 +95,9 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
   try {
     await connectDB();
+    const { id } = await params;
     const product = await ProductModel.findOneAndUpdate(
-      { _id: params.id, isDeleted: { $ne: true } },
+      { _id: id, isDeleted: { $ne: true } },
       { isDeleted: true, isActive: false, deletedAt: new Date() },
       { new: true }
     );

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Loader2, AlertCircle, CheckCircle, X, Trash2 } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle, X} from "lucide-react";
 
 interface Category {
   _id: string;
@@ -110,15 +110,15 @@ export default function EditProductPage() {
       try {
         setFetching(true);
         
-        const res = await fetch(`/api/admin/products/${id}`, {
-          signal: controller.signal,
-        });
+        // FIXED: Use full API path with the id
+        const res = await fetch(`/api/admin/products/${id}`);
         
         if (!res.ok) {
-          throw new Error(`Server error: ${res.status}`);
+          throw new Error(`Failed to fetch product: ${res.status}`);
         }
         
         const data = await res.json();
+        console.log("Product data received:", data); // Debug log
         
         if (data.ok && data.data) {
           const product = data.data;
@@ -145,10 +145,10 @@ export default function EditProductPage() {
           setTimeout(() => router.push("/admin/products"), 2000);
         }
       } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") {
-          return; // Component unmounted — ignore
-        }
         console.error("Error fetching product:", error);
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
         setSubmitError("Failed to load product data");
       } finally {
         if (!controller.signal.aborted) {
@@ -162,7 +162,7 @@ export default function EditProductPage() {
     return () => {
       controller.abort();
     };
-  }, [id]);
+  }, [id, router]);
 
   const validateForm = useCallback((): boolean => {
     const newErrors: FormErrors = {};
@@ -315,7 +315,6 @@ export default function EditProductPage() {
     
     const isValid = validateForm();
     if (!isValid) {
-      // Use a short delay to let setErrors update before reading errors
       setTimeout(() => {
         const firstErrorEl = document.querySelector("[data-error='true']");
         if (firstErrorEl) firstErrorEl.scrollIntoView({ behavior: "smooth", block: "center" });

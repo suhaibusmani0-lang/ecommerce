@@ -25,15 +25,13 @@ export async function POST(req) {
     if (!session?.userId) return jsonRes(401, "Please login to continue");
 
     const { orderId, amount } = await req.json();
-    if (!orderId || typeof amount !== "number" || Number.isNaN(amount) || amount <= 0) {
-      return jsonRes(400, "Invalid payment request");
-    }
+    if (!orderId || !amount) return jsonRes(400, "Invalid payment request");
 
     const order = await OrderModel.findOne({ _id: orderId, user: session.userId });
     if (!order) return jsonRes(404, "Order not found");
-    if (order.paymentStatus === "Paid") return jsonRes(400, "Order is already paid");
 
     const razorpay = getRazorpayClient();
+
     const options = {
       amount: Math.round(amount * 100),
       currency: "INR",
@@ -45,6 +43,7 @@ export async function POST(req) {
     };
 
     const razorpayOrder = await razorpay.orders.create(options);
+
     order.razorpayOrderId = razorpayOrder.id;
     await order.save();
 

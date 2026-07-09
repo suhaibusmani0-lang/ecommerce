@@ -15,6 +15,10 @@ import { showToast } from "@/lib/showToast";
 const formSchema = z
   .object({
     name: z.string().min(1, "Full name required"),
+    phone: z
+      .string()
+      .min(10, "Phone number must be at least 10 digits")
+      .max(16, "Phone number is too long"),
     email: z.string().email("Invalid email"),
     password: z.string().min(6, "Minimum 6 characters"),
     confirmPassword: z.string(),
@@ -33,6 +37,7 @@ export default function RegisterPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      phone: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -51,6 +56,7 @@ export default function RegisterPage() {
         "/api/auth/register",
         {
           name: data.name,
+          phone: data.phone,
           email: data.email,
           password: data.password,
         },
@@ -125,6 +131,22 @@ export default function RegisterPage() {
         {form.formState.errors.name && (
           <p className="text-red-500 text-xs mt-1">
             {form.formState.errors.name.message}
+          </p>
+        )}
+      </div>
+
+      {/* Phone */}
+      <div>
+        <label className="text-sm sm:text-base">Mobile Number</label>
+        <input
+          type="tel"
+          {...form.register("phone")}
+          placeholder="+91 98765 43210"
+          className="w-full border rounded px-3 py-2 mt-1 text-sm sm:text-base"
+        />
+        {form.formState.errors.phone && (
+          <p className="text-red-500 text-xs mt-1">
+            {form.formState.errors.phone.message}
           </p>
         )}
       </div>

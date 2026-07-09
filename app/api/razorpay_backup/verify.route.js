@@ -22,7 +22,6 @@ export async function POST(req) {
 
     const order = await OrderModel.findOne({ _id: orderId, user: session.userId });
     if (!order) return jsonRes(404, "Order not found");
-    if (order.paymentStatus === "Paid") return jsonRes(400, "Order is already paid");
 
     if (!process.env.RAZORPAY_KEY_SECRET) {
       return jsonRes(500, "Razorpay credentials are not configured");
@@ -34,16 +33,21 @@ export async function POST(req) {
       .update(body.toString())
       .digest("hex");
 
-    if (expectedSignature !== razorpay_signature) {
-      return jsonRes(400, "Payment verification failed");
-    }
+    const isAuthentic = expectedSignature === razorpay_signature;
+    if (!isAuthentic) return jsonRes(400, "Payment verification failed");
 
     for (const item of order.items) {
-      const productId = item.product?.toString();
+      const productId = item.product?.toString() || item.productId;
       if (!productId) continue;
       const product = await ProductModel.findById(productId);
       if (!product) continue;
       if (product.stock < item.qty) return jsonRes(400, `Insufficient stock for ${item.name}`);
+    }
+
+    for (const item of order.items) {
+      const productId = item.product?.toString() || item.productId;
+      if (!productId) continue;
+      await ProductModel.findByIdAndUpdate(productId, { $inc: { stock: -item.qty } });
     }
 
     order.paymentStatus = "Paid";
