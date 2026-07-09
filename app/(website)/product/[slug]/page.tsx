@@ -6,13 +6,51 @@ import ProductGallery from "@/components/website/ProductGallery";
 import ProductActions from "@/components/website/ProductActions";
 import ReviewForm from "@/components/website/ReviewForm";
 
+// --- NAYE DATABASE IMPORTS ---
+// NOTE: Apne project ke hisaab se in paths ko theek kar lena agar alag hon
+import { connectDB } from "@/lib/db"; // Tumhara Mongoose connection file
+import Product from "@/models/Product.model";
+import Review from "@/models/Review.model"; // Agar reviews ka alag model hai
+// -----------------------------
+
 async function getProduct(slug: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/products/${slug}`, {
-    //cache: "no-store",
-  });
-  // if (!res.ok) return null;
-  const data = await res.json();
-  return data.data;
+  // 1. API call (fetch) hata kar seedha DB connect kiya
+  await connectDB();
+
+  try {
+    // 2. Main product fetch karo
+    const product = await Product.findOne({ slug }).populate("category").lean();
+    
+    if (!product) return null;
+
+    // 3. Is product ke reviews fetch karo
+    const reviews = await Review.find({ product: product._id })
+      .populate("user", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // 4. Related products fetch karo (same category se)
+    let relatedProducts = [];
+    if (product.category) {
+      relatedProducts = await Product.find({
+        category: product.category._id || product.category,
+        _id: { $ne: product._id }
+      })
+      .limit(4)
+      .lean();
+    }
+
+    // JSON.parse(JSON.stringify) zaroori hai taaki MongoDB ke complex ObjectIds 
+    // plain string me convert ho jayein, warna Next.js Client Components me error dega.
+    return JSON.parse(JSON.stringify({
+      product,
+      reviews: reviews || [],
+      relatedProducts: relatedProducts || []
+    }));
+  } catch (error) {
+    console.error("Error fetching product direct from DB:", error);
+    return null;
+  }
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -26,8 +64,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ? Math.round(((product.price - product.salePrice) / product.price) * 100)
     : 0;
 
-  const averageRating = product.ratings.average || 0;
-  const ratingCount = product.ratings.count || 0;
+  const averageRating = product.ratings?.average || 0;
+  const ratingCount = product.ratings?.count || 0;
 
   return (
     <div className="min-h-screen bg-[#FAF7F2]">
