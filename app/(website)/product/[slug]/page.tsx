@@ -8,7 +8,7 @@ import ReviewForm from "@/components/website/ReviewForm";
 
 // --- NAYE DATABASE IMPORTS ---
 // NOTE: Apne project ke hisaab se in paths ko theek kar lena agar alag hon
-import { connectDB } from "@/lib/db"; // Tumhara Mongoose connection file
+import { connectDB } from "@/lib/databaseConnection"; // Tumhara Mongoose connection file
 import Product from "@/models/Product.model";
 import Review from "@/models/Review.model"; // Agar reviews ka alag model hai
 // -----------------------------
