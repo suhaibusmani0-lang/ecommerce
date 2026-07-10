@@ -191,3 +191,11 @@ vite.config.ts.timestamp-*
 >>>>>>> f05f6e8e2c7b92f0ef1b653ee6af7d1923670b67
 =======
 >>>>>>> 7d446605f14372f33441671404476fcc8a3b5563
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
