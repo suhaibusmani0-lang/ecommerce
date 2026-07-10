@@ -26,19 +26,26 @@ export default function AddToCartButton({
   const dispatch = useDispatch();
   const auth = useSelector((state: RootState) => state.authStore?.auth);
   const [added, setAdded] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleAddToCart = async () => {
     try {
+      setLoading(true);
       if (auth) {
+        // Backend API Hit
         const res = await fetch("/api/cart", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ productId, qty }),
         });
+        
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          console.error("Failed to add to cart on server:", data.message);
+          console.error("Failed to add to cart on server:", data);
+          // Yahan exact error screen par dikhega!
+          alert(`Error adding to cart: ${data.message || data.error || res.statusText}`);
+          setLoading(false);
           return;
         }
 
@@ -46,6 +53,7 @@ export default function AddToCartButton({
           dispatch(setCart(mapApiCartItems(data.data.items)));
         }
       } else {
+        // Guest User Logic
         for (let i = 0; i < qty; i++) {
           dispatch(addToCart({
             id: productId,
@@ -59,16 +67,19 @@ export default function AddToCartButton({
       }
 
       setAdded(true);
+      setLoading(false);
       setTimeout(() => setAdded(false), 2000);
     } catch (error) {
       console.error("Error adding to cart:", error);
+      alert("Network Error: Could not reach the server.");
+      setLoading(false);
     }
   };
 
   return (
     <button
       onClick={handleAddToCart}
-      disabled={disabled || added}
+      disabled={disabled || added || loading}
       className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-colors ${
         disabled
           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -85,7 +96,7 @@ export default function AddToCartButton({
       ) : (
         <>
           <ShoppingCart size={18} />
-          <span>Add to Cart</span>
+          <span>{loading ? "Adding..." : "Add to Cart"}</span>
         </>
       )}
     </button>

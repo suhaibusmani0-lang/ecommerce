@@ -42,7 +42,9 @@ export default function ProductActions({
       if (!auth) return;
       
       try {
-        const res = await fetch(`/api/wishlist/check?productId=${productId}`);
+        const res = await fetch(`/api/wishlist/check?productId=${productId}`, {
+          credentials: "include" // Added credentials here too
+        });
         if (res.ok) {
           const data = await res.json();
           setWished(data.isInWishlist || false);
@@ -66,12 +68,13 @@ export default function ProductActions({
         const res = await fetch("/api/cart", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include", // <-- YEH ADD KIYA HAI TAASI SESSION COOKIE SATH JAYE
           body: JSON.stringify({ productId, qty }),
         });
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-          throw new Error(data.message || "Failed to add to cart");
+          throw new Error(data.message || data.error || res.statusText || "Failed to add to cart");
         }
 
         if (data.data?.items) {
@@ -94,7 +97,9 @@ export default function ProductActions({
       setTimeout(() => setAdded(false), 2000);
     } catch (error) {
       console.error("Error adding to cart:", error);
-      setError(error instanceof Error ? error.message : "Failed to add to cart");
+      const errMsg = error instanceof Error ? error.message : "Failed to add to cart";
+      setError(errMsg);
+      alert(`API Error: ${errMsg}`); // <-- TAAKI SCREEN PAR ERROR DIKHE
     } finally {
       setIsAddingToCart(false);
     }
@@ -114,7 +119,8 @@ export default function ProductActions({
     try {
       if (wished) {
         const res = await fetch(`/api/wishlist?productId=${productId}`, { 
-          method: "DELETE" 
+          method: "DELETE",
+          credentials: "include" 
         });
         
         if (!res.ok) {
@@ -125,6 +131,7 @@ export default function ProductActions({
         const res = await fetch("/api/wishlist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ productId }),
         });
         
@@ -148,9 +155,7 @@ export default function ProductActions({
         await navigator.share({ title: name, url });
       } else {
         await navigator.clipboard.writeText(url);
-        // Use a toast notification instead of alert for better UX
         setError(null);
-        // You could add a "Copied!" state here
         alert("Link copied to clipboard!");
       }
     } catch (error) {
