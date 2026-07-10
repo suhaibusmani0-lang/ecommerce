@@ -20,7 +20,7 @@ async function getCategoryData(slug: string, searchParams: SearchParams) {
   });
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/categories?${params.toString()}`,
+    `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "/"}/api/categories?${params.toString()}`,
     { cache: "no-store" }
   );
   if (!res.ok) return null;

@@ -19,7 +19,7 @@ interface Product {
   
 // ---------- Fetch product by slug ----------
 async function getProduct(slug: string): Promise<Product | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "/";
   const url = `${baseUrl}/api/products/${slug}`;
 
   // Optional: log the request for debugging
@@ -44,7 +44,7 @@ async function getSimilarProducts(
   categorySlug: string,
   currentProductId: string
 ): Promise<Product[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "/";
   const url = `${baseUrl}/api/products?category=${categorySlug}&limit=4&exclude=${currentProductId}`;
 
   try {
