@@ -3,30 +3,50 @@ import Link from "next/link";
 import { SlidersHorizontal, Grid, List } from "lucide-react";
 import ProductFilterSidebar from "@/components/website/ProductFilterSidebar";
 
+// --- NAYE DATABASE IMPORTS ---
+import { connectDB } from "@/lib/databaseConnection";
+import Product from "@/models/Product.model";
+// -----------------------------
+
 type SearchParams = Record<string, string | string[] | undefined>;
 
 async function getProducts(searchParams: SearchParams) {
-  const params = new URLSearchParams();
-  Object.entries(searchParams).forEach(([key, value]) => {
-    if (value === undefined) return;
-    if (Array.isArray(value)) {
-      value.forEach((v) => params.append(key, v));
-    } else {
-      params.set(key, value);
-    }
-  });
+  await connectDB();
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "/"}/api/products?${params.toString()}`,
-    {
-      // cache: "no-store",
-    }
-  );
+  try {
+    const page = parseInt(typeof searchParams.page === "string" ? searchParams.page : "1") || 1;
+    const sort = typeof searchParams.sort === "string" ? searchParams.sort : "newest";
+    const limit = 12; // Products per page
+    const skip = (page - 1) * limit;
 
-  if (!res.ok) return null;
+    // Yahan agar filter lagane hain toh query object me add kar sakte hain
+    const query: any = {};
 
-  const data = await res.json();
-  return data.data;
+    // Sorting logic
+    let sortOption: any = { createdAt: -1 }; // newest
+    if (sort === "price-low") sortOption = { price: 1 };
+    if (sort === "price-high") sortOption = { price: -1 };
+    if (sort === "popular") sortOption = { "ratings.average": -1 };
+
+    const [products, total] = await Promise.all([
+      Product.find(query).sort(sortOption).skip(skip).limit(limit).lean(),
+      Product.countDocuments(query)
+    ]);
+
+    const pages = Math.ceil(total / limit);
+    const hasMore = page < pages;
+
+    // Plain JSON stringify taaki Next.js client component ko problem na ho
+    return JSON.parse(JSON.stringify({
+      products: products || [],
+      total,
+      pages,
+      hasMore
+    }));
+  } catch (error) {
+    console.error("Error fetching all products from DB:", error);
+    return null;
+  }
 }
 
 export default async function ProductsPage({
