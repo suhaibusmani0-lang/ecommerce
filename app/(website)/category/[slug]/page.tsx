@@ -17,7 +17,7 @@ async function getCategoryData(slug: string, searchParams: SearchParams) {
 
   try {
     // 1. Find the category by slug
-    const category = await Category.findOne({ slug }).lean();
+    const category = await Category.findOne({ slug: { $regex: new RegExp("^" + slug + "$", "i") } }).lean();
     if (!category) return null;
 
     // 2. Setup pagination and sorting from searchParams
