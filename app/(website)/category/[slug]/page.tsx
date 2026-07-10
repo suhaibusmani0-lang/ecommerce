@@ -4,28 +4,62 @@ import Link from "next/link";
 import { Grid, List } from "lucide-react";
 import ProductFilterSidebar from "@/components/website/ProductFilterSidebar";
 
+// --- DATABASE IMPORTS ---
+import { connectDB } from "@/lib/databaseConnection"; 
+import Category from "@/models/Category.model"; // Category model path check kar lena
+import Product from "@/models/Product.model";   // Product model path check kar lena
+// ------------------------
+
 type SearchParams = Record<string, string | string[] | undefined>;
 
 async function getCategoryData(slug: string, searchParams: SearchParams) {
-  const params = new URLSearchParams();
-  params.set("slug", slug);
+  await connectDB();
 
-  Object.entries(searchParams).forEach(([key, value]) => {
-    if (value === undefined) return;
-    if (Array.isArray(value)) {
-      value.forEach((v) => params.append(key, v));
-    } else {
-      params.set(key, value);
-    }
-  });
+  try {
+    // 1. Find the category by slug
+    const category = await Category.findOne({ slug }).lean();
+    if (!category) return null;
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "/"}/api/categories?${params.toString()}`,
-    { cache: "no-store" }
-  );
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.data;
+    // 2. Setup pagination and sorting from searchParams
+    const page = parseInt(typeof searchParams.page === "string" ? searchParams.page : "1") || 1;
+    const sort = typeof searchParams.sort === "string" ? searchParams.sort : "newest";
+    const limit = 12; // Number of products per page
+    const skip = (page - 1) * limit;
+
+    // 3. Build query for products in this category
+    const query: any = { category: category._id };
+
+    // 4. Setup Sorting Logic
+    let sortOption: any = { createdAt: -1 }; // newest
+    if (sort === "price-low") sortOption = { price: 1 };
+    if (sort === "price-high") sortOption = { price: -1 };
+    if (sort === "rating") sortOption = { "ratings.average": -1 };
+
+    // 5. Fetch Products and Total Count concurrently
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(query)
+    ]);
+
+    const pages = Math.ceil(total / limit);
+    const hasMore = page < pages;
+
+    // 6. Return plain JSON stringified to prevent Next.js Client Component errors
+    return JSON.parse(JSON.stringify({
+      category,
+      products: products || [],
+      total,
+      pages,
+      hasMore
+    }));
+  } catch (error) {
+    console.error("Error fetching category data from DB:", error);
+    return null;
+  }
 }
 
 export default async function CategoryPage({
@@ -112,7 +146,7 @@ export default async function CategoryPage({
                     >
                       <div className="bg-white rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
                         <div className="aspect-square relative">
-                          {product.images[0] ? (
+                          {product.images && product.images[0] ? (
                             <Image
                               src={product.images[0].url}
                               alt={product.name}
@@ -155,7 +189,7 @@ export default async function CategoryPage({
                                 <span
                                   key={star}
                                   className={`text-xs ${
-                                    star <= Math.round(product.ratings.average || 0)
+                                    star <= Math.round(product.ratings?.average || 0)
                                       ? "text-yellow-400"
                                       : "text-gray-300"
                                   }`}
@@ -165,7 +199,7 @@ export default async function CategoryPage({
                               ))}
                             </div>
                             <span className="text-xs text-[#1A1A1A]/60">
-                              ({product.ratings.count || 0})
+                              ({product.ratings?.count || 0})
                             </span>
                           </div>
                         </div>
